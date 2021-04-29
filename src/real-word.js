@@ -1,123 +1,137 @@
-//TODO - move constants to their own file
-const VOWELS = [
-    'A', 'E', 'I', 'O', 'U', 'Y'
-]
-
-//Real Word
-const VALID_DOUBLE_VOWELS = [
-    'AI', 'AY', 'EA', 'EE', 'EO', 'IO', 'OA', 'OO', 'OY', 'YA', 'YO', 'YU'
-]
-
-const VALID_TRIPLE_CONSONANTS = [
-    'SCH', 'SCR', 'SHR', 'THR'
-]
+import { VOWELS, VALID_LETTER_COMBOS } from './constants'
 
 export function isVowel(character) {
-    // if (character.length !== 1) {
-    //     throw Error("Is Vowel only accepts single characters");
-    // }
-    return VOWELS.includes(character)
+  if (character.length !== 1) {
+    throw new Error('isVowel only accepts single characters')
+  }
+  return VOWELS.includes(character)
 }
 
 export function isConsonant(character) {
-    return !isVowel(character)
+  if (character.length !== 1) {
+    throw new Error('isConsonant only accepts single characters')
+  }
+  return !isVowel(character)
 }
 
-export function isValidTripleConsonant(substring) {
-    return VALID_TRIPLE_CONSONANTS.includes(substring);
+export function isValid2ConsonantCombo(substring) {
+  const { consonantCount } = getNumVowelsAndConsonants(substring)
+  if (consonantCount !== 2) {
+    throw new Error('isValid2ConsonantCombo must be passed 2 consonants only')
+  }
+
+  for (let idx = 0; idx < substring.length - 1; idx++) {
+    const firstTwoChars = substring.substring(idx, idx + 2)
+    if (VALID_LETTER_COMBOS.includes(firstTwoChars)) {
+      return true
+    }
+  }
+  return false
+}
+export function isValid3ConsonantCombo(substring) {
+  const { consonantCount } = getNumVowelsAndConsonants(substring)
+  if (consonantCount !== 3) {
+    throw new Error('isValid3ConsonantCombo must be passed 3 consonants only')
+  }
+  return VALID_LETTER_COMBOS.includes(substring)
 }
 
-//might be okay if theres overlap with these
-//as in if this condition contains another condition that's invalid
-export function isValidDoubleVowel(substring) {
-    return VALID_DOUBLE_VOWELS.includes(substring.substring(0, 2)) || VALID_DOUBLE_VOWELS.includes(substring.substring(1, 3))
+export function isValid2VowelCombo(substring) {
+  const { vowelCount } = getNumVowelsAndConsonants(substring)
+  if (vowelCount !== 2) {
+    throw new Error('isValid2VowelCombo must be passed 2 vowels only')
+  }
+
+  for (let idx = 0; idx < substring.length - 1; idx++) {
+    const firstTwoChars = substring.substring(idx, idx + 2)
+    if (VALID_LETTER_COMBOS.includes(firstTwoChars)) {
+      return true
+    }
+  }
+  return false
 }
 
-//iab or abi
-function isDoubleConsonant(substring) {
-    return VALID.includes(substring.substring(0, 2)) || VALID_DOUBLE_VOWELS.includes(substring.substring(1, 3))
+export function containsDoubleConsonant(substring) {
+  const { consonantCount } = getNumVowelsAndConsonants(substring)
+  if (consonantCount !== 2) {
+    throw new Error('containsDoubleConsonant must be passed 2 consonants only')
+  }
 
-    //if both chars are not in vowels
+  for (let idx = 0; idx < substring.length - 1; idx++) {
+    if (substring.charAt(idx) === substring.charAt(idx + 1)) {
+      return true
+    }
+  }
+  return false
 }
 
 export function isAlternatingVowelConsonants(substring) {
-    for (let idx = 0; idx < substring.length - 1; idx++) {
-        const firstChar = substring.charAt(idx)
-        const nextChar = substring.charAt(idx + 1)
-        if (isVowel(firstChar) && isVowel(nextChar) || isConsonant(firstChar) && isConsonant(nextChar)) {
-            return false;
-        }
+  for (let idx = 0; idx < substring.length - 1; idx++) {
+    const firstChar = substring.charAt(idx)
+    const nextChar = substring.charAt(idx + 1)
+    if ((isVowel(firstChar) && isVowel(nextChar)) || (isConsonant(firstChar) && isConsonant(nextChar))) {
+      return false
     }
-    return true
+  }
+  return true
 }
 
 export function getNumVowelsAndConsonants(substring) {
-    let consonantCount = 0;
-    let vowelCount = 0;
+  let consonantCount = 0
+  let vowelCount = 0
 
-    for (const char of substring) {
-        if (isVowel(char)) {
-            vowelCount++
-        } else {
-            consonantCount++
-        }
+  for (const char of substring) {
+    if (isVowel(char)) {
+      vowelCount++
+    } else {
+      consonantCount++
     }
+  }
 
-    return {
-        consonantCount, //todo; convert to single field i think?
-        vowelCount
-    }
+  return {
+    consonantCount,
+    vowelCount,
+  }
 }
 
+const looksReal = (word) => {
+  if (word.length === 1) {
+    return true
+  } else if (word.length === 2) {
+    return !isAlternatingVowelConsonants(word) && !isValid2ConsonantCombo(word) && !isValid2VowelCombo(word)
+  }
 
+  for (let i = 1; i < word.length - 1; i++) {
+    const threeCharSubstring = word.slice(i - 1, i + 2)
 
-const looksReal = word => {
-
-    if (word.length == 1) {
-        return true;
-    } else if (word.length == 2) {
-        //not sure?
+    if (isAlternatingVowelConsonants(threeCharSubstring)) {
+      continue
     }
 
-    /*
-        - letters alternate between vowels and consonants
-        - double consonants allowed, but not more then 2, EXCEPT:
-        - 'SCH', 'SCR', 'SHR', 'THR'
-        - only these double Vowels allowed:
-            - 'AI', 'AY', 'EA', 'EE', 'EO', 'IO', 'OA', 'OO', 'OY', 'YA', 'YO', 'YU'
-        - no other combos are allowed (implies no double or more vowels)
-    */
-    /* iterator through word
-    for any 3 consecutive chars - if they're not legal double vowels, alternating vowels, or double chars, or contain the first two chars of allowed double consonents
-    'return false'
-    */
-    /**
-     *  3C - if NOT approved list, return false
-     * 2C 1V - continue (either double CCs or CVC, either is fine) // so dont even check this
-     * 2V 1C - if NOT approved double vowels && NOT alternating return false
-     * else false
-     */
+    const { consonantCount, vowelCount } = getNumVowelsAndConsonants(threeCharSubstring)
 
-    for (let i = 1; i < word.length - 1; i++) {
-        const substring = word.substring(i - 1, i + 2); //might wanna do word.slice for immutability
-
-        const { consonantCount, vowelCount } = getNumVowelsAndConsonants(substring)
-        if (consonantCount === 3) {
-            if (!isValidTripleConsonant(substring)) {
-                return false;
-            }
-        } else if (consonantCount === 2 && vowelCount === 1) {
-            //do nothing
-            continue;
-        } else if (consonantCount === 1 && vowelCount === 2) {
-            if (!isAlternatingVowelConsonants(substring) && !isValidDoubleVowel(substring)) {
-                return false;
-            }
-        } else {
-            return false;
+    switch (true) {
+      case consonantCount === 3 && vowelCount === 0:
+        if (!isValid3ConsonantCombo(threeCharSubstring)) {
+          return false
         }
+        i++ //move i to final char of 3 valid 3 char combo SCH
+        break
+      case consonantCount === 2 && vowelCount === 1:
+        if (!containsDoubleConsonant(threeCharSubstring) && !isValid2ConsonantCombo(threeCharSubstring)) {
+          return false
+        }
+        break
+      case consonantCount === 1 && vowelCount === 2:
+        if (!isValid2VowelCombo(threeCharSubstring)) {
+          return false
+        }
+        break
+      default:
+        return false
     }
-    return true;
+  }
+  return true
 }
 
-export default looksReal;
+export default looksReal
